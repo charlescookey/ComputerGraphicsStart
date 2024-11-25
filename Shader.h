@@ -10,12 +10,31 @@
 #pragma comment(lib, "dxguid.lib")
 
 
+struct alignas(16) ConstantBuffer
+{
+	float time;
+};
+
+struct alignas(16) ConstantBuffer2
+{
+	float time;
+	float padding[3];
+	Vec4 lights[4];
+};
+
+
+ID3D11Buffer* constantBuffer;
+
+
 class Shader {
 public:
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
 
 	ID3D11InputLayout* layout;
+
+	ConstantBuffer2 constBufferCPU2;
+
 
 	std::string readFile(std::string filename) {
 		std::ifstream infile(filename);
@@ -28,6 +47,21 @@ public:
 	void init(std::string VS_filename , std::string PS_filename, DXCOre* core) {
 		std::string vs = readFile(VS_filename);
 		std::string ps = readFile(PS_filename);
+
+
+		//here?
+		constBufferCPU2.time = 0;
+
+		D3D11_BUFFER_DESC bd;
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		bd.MiscFlags = 0;
+		D3D11_SUBRESOURCE_DATA data;
+		bd.ByteWidth = sizeof(ConstantBuffer2);
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		core->device->CreateBuffer(&bd, NULL, &constantBuffer);
+
+
 
 		compileVS(vs, core);
 		compilePS(ps, core);
@@ -68,9 +102,20 @@ public:
 	}
 
 	void apply(DXCOre* core) {
+
+		//here?!
+		D3D11_MAPPED_SUBRESOURCE mapped;
+		core->devicecontext->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+		memcpy(mapped.pData, &constBufferCPU2, sizeof(ConstantBuffer2));
+		core->devicecontext->Unmap(constantBuffer, 0);
+
+
 		core->devicecontext->IASetInputLayout(layout);
 		core->devicecontext->VSSetShader(vertexShader, NULL, 0);
 		core->devicecontext->PSSetShader(pixelShader, NULL, 0);
+
+		core->devicecontext->PSSetConstantBuffers(0, 1, &constantBuffer);
+
 	}
 
 };
