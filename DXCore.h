@@ -16,6 +16,15 @@ public:
 
 	ID3D11RasterizerState* rasterizerState;
 
+	~DXCOre() {
+		backbuffer->Release();
+		depthStencilView->Release();
+		depthbuffer->Release();
+		backbufferRenderTargetView->Release();
+		swapchain->Release();
+		devicecontext->Release();
+		device->Release();
+	}
 
 	void init(int width, int height, HWND hwnd, bool window_fullscreen) {
 		DXGI_SWAP_CHAIN_DESC sd;
