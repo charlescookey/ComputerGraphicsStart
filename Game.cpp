@@ -5,8 +5,6 @@
 
 #include "Shader.h"
 
-#define M_PI       3.14159265358979323846
-
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow) {
 	Window win;
@@ -16,16 +14,34 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nC
 	core.init(win.width, win.height, win.hwnd, false);
 
 	Shader shader;
-	shader.init("VertexShader.txt", "PixelShader.txt", &core);
-	
-	Triangle triangle;
-	triangle.init(&core);
+	shader.init("StaticMeshVertex.txt", "StaticMeshPixel.txt", &core);
+
+	Plane p;
+	p.init(&core);
+
+	Cube c;
+	c.init(&core);
+
+	Sphere s(20, 20, 2);
+	s.init(&core);
+
+	Model model;
+	model.init(&core, "acacia.gem");
 
 	Timer timer;
 	float dt = 0.f;
+	float t = 0.f;
+	
+
+	//to is camera+look at direction
+	//phi for strafing
+	//setCuirsorPos
+	//offert in bone is inveser bind pose
 
 	float WIDTH = 1024.f;
 	float HEIGHT = 1024.f;
+
+	Matrix proj = Matrix::ProjectionMatrix(90.0, 1024 / 1024, 1000, 0.01f);
 
 	while (true)
 	{
@@ -33,21 +49,37 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nC
 		core.clear();
 
 		dt = timer.dt();
-		shader.constBufferCPU2.time += dt;
+		t += dt;
 
-		//spinning lights
-		for (int i = 0; i < 4; i++)
-		{
-			float angle = shader.constBufferCPU2.time + (i * M_PI / 2.0f);
-			shader.constBufferCPU2.lights[i] = Vec4(WIDTH / 2.0f + (cosf(angle) * (WIDTH * 0.3f)),
-				HEIGHT / 2.0f + (sinf(angle) * (HEIGHT * 0.3f)),
-				0, 0);
-		}
+		Vec3 from = Vec3(11 * cos(t), 5, 11 * sinf(t));
+		Matrix v = Matrix::LookAtMatrixRot(from, Vec3(0, 1, 0), Vec3(0, 1, 0));
 
+		Matrix w;// = Matrix::scaling(Vec3(0.1f, 0.1f, 0.1f));
+
+		//w = Matrix::translation(Vec3(0, 0, 0));
+		//w = Matrix::scaling(Vec3(0.01f, 0.01f, 0.01f));
+		w = Matrix::scaling(Vec3(0.1f, 0.1f, 0.1f));
+
+
+		//shader.updateConstantVS("StaticModel", "staticMeshBuffer", "W", &planeWorld);
+		//shader.updateConstantVS("StaticModel", "staticMeshBuffer", "VP", &vp);
+
+		shader.updateConstantVS( "staticMeshBuffer", "W", &w);
+		Matrix vp = v.mull(proj);
+		shader.updateConstantVS( "staticMeshBuffer", "VP", &vp);
 
 
 		shader.apply(&core);
-		triangle.draw(&core);
+		p.geometry.draw(&core);
+		//s.geometry.draw(&core);
+		//c.geometry.draw(&core);
+		//model.draw(&core);
+
+
+		//w = Matrix::translation(Vec3(5, 0, 0));
+		//shader.updateConstantVS("staticMeshBuffer", "W", &w);
+		//shader.apply(&core);
+		//c.geometry.draw(&core);
 
 
 		core.present();
