@@ -9,6 +9,8 @@
 
 #define SQ(X) (X)*(X)
 
+#define M_PI       3.14159265358979323846
+
 template<class T>
 const T& maxx(const T& a, const T& b)
 {
@@ -41,6 +43,12 @@ public:
 		x = 0;
 		y = 0;
 		z = 0;
+	}
+
+	Vec3(const Vec3& copy) {
+		x = copy.x;
+		y = copy.y;
+		z = copy.z;
 	}
 
 	Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {
@@ -173,6 +181,8 @@ public:
 
 float Dot(const Vec3& v1, const Vec3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
 
+Vec3 Cross(const Vec3& v1, const Vec3& v2) { return Vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
+
 Vec3 Max(const Vec3& v1, const Vec3& v2) { return Vec3(maxx(v1.x, v2.x), maxx(v1.y, v2.y), maxx(v1.z, v2.z)); }
 
 Vec3 Min(const Vec3& v1, const Vec3& v2) { return Vec3(minn(v1.x, v2.x), minn(v1.y, v2.y), minn(v1.z, v2.z)); }
@@ -192,6 +202,10 @@ public:
 		a[1][1] = 1.0f;
 		a[2][2] = 1.0f;
 		a[3][3] = 1.0f;
+	}
+
+	void zeros() {
+		memset(m, 0, 16 * sizeof(float));
 	}
 
 	Matrix() {
@@ -289,12 +303,13 @@ public:
 		return mat;
 	}
 
-	static Matrix ProjectionMatrix(float fov , float aspectRatio , float far , float near) {
+	static Matrix ProjectionMatrix(float _fov , float aspectRatio , float zfar , float znear) {
+		float fov = _fov * M_PI / 180;
 		Matrix mat;
 		mat.a[0][0] = 1 / (aspectRatio * tan(fov/2));
 		mat.a[1][1] = 1 /  tan(fov / 2);
-		//mat.a[2][2] = ( - far) / (far - near);
-		//mat.a[2][3] = -far * near / (far - near);
+		mat.a[2][2] = ( - zfar) / (zfar - znear);
+		mat.a[2][3] = -zfar * znear / (zfar - znear);
 		mat.a[3][2] = -1;
 		mat.a[3][3] = 0;
 		return mat;
@@ -328,10 +343,13 @@ public:
 
 	static Matrix LookAtMatrixRot(Vec3 from, Vec3 to, Vec3 up) {
 		Vec3 dir = from - to;
-		dir.normalize();
+		dir = dir.normalize();
 
-		Vec3 right = up.Cross(dir);
-		Vec3 _up = dir.Cross(right);
+		//Vec3 right = Cross(up ,dir).normalize();
+		Vec3 right = Cross(up, dir);
+		right = right.normalize();
+		Vec3 _up = Cross(dir ,right);
+;
 
 		Matrix mat;
 		mat.a[0][0] = right.x;
@@ -346,9 +364,14 @@ public:
 		mat.a[2][1] = dir.y;
 		mat.a[2][2] = dir.z;
 
-		mat.a[0][3] = ((from*-1).Dot(right));
-		mat.a[1][3] = ((from*-1).Dot(_up));
-		mat.a[2][3] = ((from*-1).Dot(dir));
+		Vec3 _from = from * -1;
+
+		//mat.a[0][3] = ((from*-1).Dot(right));
+		mat.a[0][3] = Dot(_from, right);
+		//mat.a[1][3] = ((from*-1).Dot(_up));
+		mat.a[1][3] = Dot(_from, _up);
+		//mat.a[2][3] = ((from*-1).Dot(dir));
+		mat.a[2][3] = Dot(_from, dir);
 
 		return mat;
 	}
@@ -413,12 +436,13 @@ public:
 	Matrix mull(const Matrix& matrix) const 
 	{
 		Matrix ret;
+		ret.zeros();
 		int N = 4;
 
 		for (int i = 0; i < N; ++i) {
 			for (int j = 0; j < N; ++j) {
 				for (int k = 0; k < N; ++k) {
-					ret.a[i][j] += a[i][k] * matrix.a[k][j];
+					ret.a[i][j] += matrix.a[i][k] * a[k][j];
 				}
 			}
 		}
@@ -673,8 +697,6 @@ Vec2 TransformToScreenSpace2(const Vec3& vertex, const Matrix projectionMatrix, 
 	return Vec2(Vx, Vy);
 };
 
-
-
 //copied from GameEngBase
 class Timer
 {
@@ -704,5 +726,64 @@ public:
 		float value = static_cast<float>(cur.QuadPart - start.QuadPart) / freq.QuadPart;
 		reset();
 		return value;
+	}
+};
+
+//Fix later
+class ShadingFrame {
+public:
+	Vec3 tangent;    // u
+	Vec3 bitangent;  // v
+	Vec3 normal;     // z
+
+	ShadingFrame(){
+		tangent = Vec3(1, 0, 0);
+		bitangent = Vec3(0, 1, 0);
+		normal = Vec3(0, 0, 1);
+	}
+
+	ShadingFrame(Vec3& n) {
+		fromNormal(n);
+	}
+
+	ShadingFrame(Vec3& n, Vec3& t) {
+		fromNormalAndTangent(n, t);
+	}
+
+	void fromNormal(Vec3& n) {
+		normal = n.normalize();
+
+		if (std::abs(normal.x) > std::abs(normal.z)) {
+			tangent = Vec3(-normal.y, normal.x, 0).normalize();
+		}
+		else {
+			tangent = Vec3(0, -normal.z, normal.y).normalize();
+		}
+
+		bitangent = normal.Cross(tangent);
+	}
+
+	void fromNormalAndTangent(Vec3& n, Vec3& t) {
+		normal = n.normalize();
+		tangent = t.normalize();
+
+		tangent = tangent - normal * normal.Dot(tangent);
+		tangent = tangent.normalize();
+
+		bitangent = normal.Cross(tangent);
+	}
+
+	Vec3 toWorldSpace(const Vec3& tangentSpaceVec) const {
+		return tangent * tangentSpaceVec.x +
+			bitangent * tangentSpaceVec.y +
+			normal * tangentSpaceVec.z;
+	}
+
+	Vec3 toTangentSpace(const Vec3& worldSpaceVec) const {
+		return Vec3(
+			worldSpaceVec.Dot(tangent),
+			worldSpaceVec.Dot(bitangent),
+			worldSpaceVec.Dot(normal)
+		);
 	}
 };
