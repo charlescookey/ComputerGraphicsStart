@@ -1,0 +1,40 @@
+cbuffer waveMeshBuffer
+{
+	float4x4 W;
+	float4x4 VP;
+	float time;
+};
+
+struct VS_INPUT
+{
+	float4 Pos : POS;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+};
+
+struct PS_INPUT
+{
+	float4 Pos : SV_POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+};
+
+PS_INPUT VS(VS_INPUT input)
+{
+    PS_INPUT output;
+
+    float4 worldPos = mul(input.Pos, W);
+    output.Pos = mul(worldPos, VP);
+
+    float oscillation = sin(time + worldPos.x) * 0.5; 
+    output.Pos.y += oscillation;
+
+    output.Normal = mul(input.Normal, (float3x3)W);
+    output.Tangent = mul(input.Tangent, (float3x3)W);
+
+    output.TexCoords = input.TexCoords;
+
+    return output;
+}
