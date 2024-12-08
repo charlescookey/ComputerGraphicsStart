@@ -70,7 +70,7 @@ public:
 	Vec3 operator*=(const float v) { x *= v; y *= v; z *= v; return *this; }
 	Vec3 operator/=(const float v) { float iv = 1.f / v; x *= iv; y *= iv; z *= iv; return *this; }
 
-	float lenght() {
+	float lenght() const{
 		return sqrtf(SQ(x) + SQ(y) + SQ(z));
 	}
 
@@ -103,6 +103,11 @@ public:
 	void print() { std::cout << "X: " << x << " Y: " << y << " Z: " << z << "\n";}
 };
 
+float Dot(const Vec3& v1, const Vec3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
+Vec3 Cross(const Vec3& v1, const Vec3& v2) { return Vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
+Vec3 Max(const Vec3& v1, const Vec3& v2) { return Vec3(maxx(v1.x, v2.x), maxx(v1.y, v2.y), maxx(v1.z, v2.z)); }
+Vec3 Min(const Vec3& v1, const Vec3& v2) { return Vec3(minn(v1.x, v2.x), minn(v1.y, v2.y), minn(v1.z, v2.z)); }
+
 
 class Vec4
 {
@@ -118,6 +123,13 @@ public:
 		y = 0;
 		z = 0;
 		w = 0;
+	}
+	
+	Vec4(const Vec3& v, float _w) {
+		x = v.x;
+		y = v.y;
+		z = v.z;
+		w = _w;
 	}
 
 	Vec4(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {
@@ -179,13 +191,9 @@ public:
 	}
 };
 
-float Dot(const Vec3& v1, const Vec3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
 
-Vec3 Cross(const Vec3& v1, const Vec3& v2) { return Vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
 
-Vec3 Max(const Vec3& v1, const Vec3& v2) { return Vec3(maxx(v1.x, v2.x), maxx(v1.y, v2.y), maxx(v1.z, v2.z)); }
 
-Vec3 Min(const Vec3& v1, const Vec3& v2) { return Vec3(minn(v1.x, v2.x), minn(v1.y, v2.y), minn(v1.z, v2.z)); }
 
 class Matrix
 {
@@ -451,6 +459,29 @@ public:
 
 	}
 
+	Matrix mul2(const Matrix& matrix) const
+	{
+		Matrix ret;
+		ret.m[0] = m[0] * matrix.m[0] + m[1] * matrix.m[4] + m[2] * matrix.m[8] + m[3] * matrix.m[12];
+		ret.m[1] = m[0] * matrix.m[1] + m[1] * matrix.m[5] + m[2] * matrix.m[9] + m[3] * matrix.m[13];
+		ret.m[2] = m[0] * matrix.m[2] + m[1] * matrix.m[6] + m[2] * matrix.m[10] + m[3] * matrix.m[14];
+		ret.m[3] = m[0] * matrix.m[3] + m[1] * matrix.m[7] + m[2] * matrix.m[11] + m[3] * matrix.m[15];
+		ret.m[4] = m[4] * matrix.m[0] + m[5] * matrix.m[4] + m[6] * matrix.m[8] + m[7] * matrix.m[12];
+		ret.m[5] = m[4] * matrix.m[1] + m[5] * matrix.m[5] + m[6] * matrix.m[9] + m[7] * matrix.m[13];
+		ret.m[6] = m[4] * matrix.m[2] + m[5] * matrix.m[6] + m[6] * matrix.m[10] + m[7] * matrix.m[14];
+		ret.m[7] = m[4] * matrix.m[3] + m[5] * matrix.m[7] + m[6] * matrix.m[11] + m[7] * matrix.m[15];
+		ret.m[8] = m[8] * matrix.m[0] + m[9] * matrix.m[4] + m[10] * matrix.m[8] + m[11] * matrix.m[12];
+		ret.m[9] = m[8] * matrix.m[1] + m[9] * matrix.m[5] + m[10] * matrix.m[9] + m[11] * matrix.m[13];
+		ret.m[10] = m[8] * matrix.m[2] + m[9] * matrix.m[6] + m[10] * matrix.m[10] + m[11] * matrix.m[14];
+		ret.m[11] = m[8] * matrix.m[3] + m[9] * matrix.m[7] + m[10] * matrix.m[11] + m[11] * matrix.m[15];
+		ret.m[12] = m[12] * matrix.m[0] + m[13] * matrix.m[4] + m[14] * matrix.m[8] + m[15] * matrix.m[12];
+		ret.m[13] = m[12] * matrix.m[1] + m[13] * matrix.m[5] + m[14] * matrix.m[9] + m[15] * matrix.m[13];
+		ret.m[14] = m[12] * matrix.m[2] + m[13] * matrix.m[6] + m[14] * matrix.m[10] + m[15] * matrix.m[14];
+		ret.m[15] = m[12] * matrix.m[3] + m[13] * matrix.m[7] + m[14] * matrix.m[11] + m[15] * matrix.m[15];
+		return ret;
+	}
+
+
 	Matrix Transpose() const
 	{
 		Matrix ret;
@@ -464,10 +495,85 @@ public:
 
 	Matrix operator*(const Matrix& matrix)
 	{
-		return mul(matrix);
+		return mul2(matrix);
 	}
 
+	Vec3 getZDirection() {
+		// The third column represents the Z direction in column-major order
+		return Vec3(a[0][2], a[1][2], a[2][2]);
+	}
 
+	Vec3 getXDirection() {
+		// The first column represents the X direction in column-major order
+		return Vec3(a[0][0], a[1][0], a[2][0]);
+	}
+	
+	Vec3 getYDirection() {
+		// The first column represents the X direction in column-major order
+		return Vec3(a[0][1], a[1][1], a[2][1]);
+	}
+
+	Vec3 getTranslation() {
+		// The fourth column represents the translation in column-major order
+		return Vec3(a[0][3], a[1][3], a[2][3]);
+	}
+
+	Vec3 getZDirection_c() {
+		// The third row represents the Z direction in row-major order
+		return Vec3(a[2][0], a[2][1], a[2][2]);
+	}
+
+	Vec3 getXDirection_c() {
+		// The first row represents the X direction in row-major order
+		return Vec3(a[0][0], a[0][1], a[0][2]);
+	}
+
+	Vec3 getTranslation_c() {
+		// The fourth row represents the translation in row-major order
+		return Vec3(a[3][0], a[3][1], a[3][2]);
+	}
+	
+	void setTranslation(const Vec3& translation)
+	{
+		a[0][3] = translation.x;
+		a[1][3] = translation.y;
+		a[2][3] = translation.z;
+	}
+
+	static Matrix reflection(const Vec3& normal, float d) {
+		Matrix reflectionMatrix;
+
+		// Normalize the normal vector
+		Vec3 n = normal;
+		n = n.normalize();
+
+		// Calculate coefficients for the reflection matrix
+		float nx = n.x;
+		float ny = n.y;
+		float nz = n.z;
+
+		reflectionMatrix.a[0][0] = 1.0f - 2.0f * nx * nx;
+		reflectionMatrix.a[0][1] = -2.0f * nx * ny;
+		reflectionMatrix.a[0][2] = -2.0f * nx * nz;
+		reflectionMatrix.a[0][3] = -2.0f * nx * d;
+
+		reflectionMatrix.a[1][0] = -2.0f * ny * nx;
+		reflectionMatrix.a[1][1] = 1.0f - 2.0f * ny * ny;
+		reflectionMatrix.a[1][2] = -2.0f * ny * nz;
+		reflectionMatrix.a[1][3] = -2.0f * ny * d;
+
+		reflectionMatrix.a[2][0] = -2.0f * nz * nx;
+		reflectionMatrix.a[2][1] = -2.0f * nz * ny;
+		reflectionMatrix.a[2][2] = 1.0f - 2.0f * nz * nz;
+		reflectionMatrix.a[2][3] = -2.0f * nz * d;
+
+		reflectionMatrix.a[3][0] = 0.0f;
+		reflectionMatrix.a[3][1] = 0.0f;
+		reflectionMatrix.a[3][2] = 0.0f;
+		reflectionMatrix.a[3][3] = 1.0f;
+
+		return reflectionMatrix;
+	}
 };
 
 
@@ -596,7 +702,12 @@ public:
 		};
 		float q[4];
 	};
-
+	Quaternions() {
+		a = 0.f;
+		b = 0.f;
+		c = 0.f;
+		d = 0.f;
+	}
 	Quaternions(float _a, float _b, float _c, float _d) :a(_a), b(_b), c(_c), d(_d) {}
 
 	Quaternions operator*(const Quaternions& v) const {
@@ -611,6 +722,7 @@ public:
 
 	Quaternions operator+(const Quaternions& v) const { return Quaternions(a + v.a, b + v.b, c + v.c, d + v.d); }
 	Quaternions operator-(const Quaternions& v) const { return Quaternions(a - v.a, b - v.b, c - v.c, d - v.d); }
+	Quaternions operator-() const { return Quaternions{ -a, -b, -c, -d };}
 
 	float magnitude() {
 		return sqrtf(SQ(a) + SQ(b) + SQ(c) + SQ(d));
@@ -633,7 +745,7 @@ public:
 		return Quaternions(a * len, -b * len, -c * len, -d * len);
 	}
 
-	Matrix3x3 toMatrix() {
+	Matrix3x3 _toMatrix() {
 		Matrix3x3 mat;
 
 		mat.a[0][0] = 1 - (2 * SQ(c)) - (2 * SQ(d));
@@ -650,7 +762,63 @@ public:
 		return mat;
 	}
 
-	float dot(const Quaternions& v) const { return (a * v.a) + (b * v.b) + (c * v.c) + (d + v.d); };
+	Matrix toMatrix__() {
+		Matrix mat;
+
+		mat.a[0][0] = 1 - (2 * SQ(c)) - (2 * SQ(d));
+		mat.a[0][1] = (2 * b * c) - (2 * a * d);
+		mat.a[0][2] = (2 * b * d) + (2 * a * c);
+		mat.a[1][0] = (2 * b * c) + (2 * a * d);
+		mat.a[1][1] = 1 - (2 * SQ(b)) - (2 * SQ(d));
+		mat.a[1][2] = (2 * c * d) - (2 * a * b);
+		mat.a[2][0] = (2 * b * d) - (2 * a * c);
+		mat.a[2][1] = (2 * c * d) + (2 * a * b);
+		mat.a[2][2] = 1 - (2 * SQ(b)) - (2 * SQ(c));
+
+		mat.a[0][3] = 0;
+		mat.a[1][3] = 0;
+		mat.a[2][3] = 0;
+
+		mat.a[3][0] = 0;
+		mat.a[3][1] = 0;
+		mat.a[3][2] = 0;
+		mat.a[3][3] = 1;
+
+		return mat;
+	}
+	
+	Matrix toMatrix()
+	{
+		float xx = q[0] * q[0];
+		float xy = q[0] * q[1];
+		float xz = q[0] * q[2];
+		float yy = q[1] * q[1];
+		float zz = q[2] * q[2];
+		float yz = q[1] * q[2];
+		float wx = q[3] * q[0];
+		float wy = q[3] * q[1];
+		float wz = q[3] * q[2];
+		Matrix matrix;
+		matrix[0] = 1.0f - 2.0f * (yy + zz);
+		matrix[1] = 2.0f * (xy - wz);
+		matrix[2] = 2.0f * (xz + wy);
+		matrix[3] = 0.0;
+		matrix[4] = 2.0f * (xy + wz);
+		matrix[5] = 1.0f - 2.0f * (xx + zz);
+		matrix[6] = 2.0f * (yz - wx);
+		matrix[7] = 0.0;
+		matrix[8] = 2.0f * (xz - wy);
+		matrix[9] = 2.0f * (yz + wx);
+		matrix[10] = 1.0f - 2.0f * (xx + yy);
+		matrix[11] = 0.0;
+		matrix[12] = 0;
+		matrix[13] = 0;
+		matrix[14] = 0;
+		matrix[15] = 1;
+		return matrix;
+	}
+
+	float dot(const Quaternions& v) const { return (a * v.a) + (b * v.b) + (c * v.c) + (d * v.d); };
 
 	Quaternions slerp(const Quaternions& v , float t) const { 
 
@@ -662,8 +830,65 @@ public:
 		float s2 = sin(theta * (t)) / sin(theta);
 		return (*this * s1) + (v * s2);
 	}
+	static Quaternions _slerp(const Quaternions& u, const Quaternions& v, float t)  {
 
+		float _dot = u.dot(v);
 
+		float theta = acos(_dot);
+
+		float s1 = sin(theta * (1 - t)) / sin(theta);
+		float s2 = sin(theta * (t)) / sin(theta);
+		return (u * s1) + (v * s2);
+	}
+	static Quaternions __slerp(const Quaternions& u, const Quaternions& v, float t) {
+		float _dot = u.dot(v);
+
+		Quaternions v2 = v;
+		if (_dot < 0.0f) {
+			_dot = -_dot;
+			v2 = -v2;
+		}
+
+		float theta = acos(_dot);
+
+		if (theta < 1e-5f) {
+			return (u * (1.0f - t)) + (v2 * t);
+		}
+
+		float s1 = sin((1.0f - t) * theta) / sin(theta);
+		float s2 = sin(t * theta) / sin(theta);
+
+		return (u * s1) + (v2 * s2);
+	}
+	static Quaternions slerp(const Quaternions& q1, const Quaternions& q2, float t) {
+		float cos;
+		Quaternions q1_ = Quaternions(q1.a, q1.b, q1.c, q1.d);
+
+		cos = q1.a * q2.a + q1.b * q2.b + q1.c * q2.c + q1.d * q2.d;
+		if (cos < 0) {
+			Quaternions q1_ = Quaternions(-q1.a, -q1.b, -q1.c, -q1.d);
+			cos = fabs(cos);
+		}
+
+		if (cos > 0.95) {
+			return Quaternions(
+				(1 - t) * q1_.a + t * q2.a,
+				(1 - t) * q1_.b + t * q2.b,
+				(1 - t) * q1_.c + t * q2.c,
+				(1 - t) * q1_.d + t * q2.d
+			).normalize();
+		}
+
+		float theta = acos(cos);
+		float sinTheta = sinf(theta);
+		// sin((1-t)theta) * q1_ / sin theta  +  sin(t*theta) * q2 / sin(theta)
+		float a_ = sinf((1 - t) * theta) * q1_.a / sinTheta + sinf(t * theta) * q2.a / sinTheta;
+		float b_ = sinf((1 - t) * theta) * q1_.b / sinTheta + sinf(t * theta) * q2.b / sinTheta;
+		float c_ = sinf((1 - t) * theta) * q1_.c / sinTheta + sinf(t * theta) * q2.c / sinTheta;
+		float d_ = sinf((1 - t) * theta) * q1_.d / sinTheta + sinf(t * theta) * q2.d / sinTheta;
+
+		return Quaternions(a_, b_, c_, d_).normalize();
+	}
 };
 
 Vec3 TransformToScreenSpace(const Vec3& vertex, const Matrix& projectionMatrix, const Matrix& lookAtMatrix, int screenWidth, int screenHeight) {
