@@ -5,6 +5,12 @@
 
 
 #include "GEMLoader.h"
+#include "ShaderManager.h"
+
+
+#include "Texture.h"
+
+
 
 struct Vertex
 {
@@ -20,6 +26,17 @@ struct STATIC_VERTEX
 	Vec3 tangent;
 	float tu;
 	float tv;
+};
+
+struct ANIMATED_VERTEX
+{
+	Vec3 pos;
+	Vec3 normal;
+	Vec3 tangent;
+	float tu;
+	float tv;
+	unsigned int bonesIDs[4];
+	float boneWeights[4];
 };
 
 class Mesh {
@@ -47,12 +64,14 @@ public:
 		strides = vertexSizeInBytes;
 	}
 
-	void init(DXCOre* core, std::vector<STATIC_VERTEX> vertices, std::vector<unsigned int> indices)
+	template<typename T>
+	void init(DXCOre* core, std::vector<T> vertices, std::vector<unsigned int> indices)
 	{
-		init(core,&vertices[0], sizeof(STATIC_VERTEX), vertices.size(), &indices[0], indices.size());
+		init(core,&vertices[0], sizeof(T), vertices.size(), &indices[0], indices.size());
 	}
 
-	void draw(DXCOre* core) {
+	void draw( DXCOre* core) {
+
 		UINT offsets = 0;
 		core->devicecontext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		core->devicecontext->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
@@ -64,6 +83,7 @@ public:
 class Plane {
 public:
 	Mesh geometry;
+	Matrix w;
 
 	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
 	{
@@ -91,10 +111,35 @@ public:
 		geometry.init(core, vertices, indices);
 
 	}
+
+	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core) {
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+
+		geometry.draw(core);
+	}
+
+	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	void move(float v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w.a[0][3] += v;
+		//w = Matrix::translation(v);
+
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
+
+	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w = Matrix::scaling(v);
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
 };
 
 class Cube {
 public:
+	Matrix w;
 	Mesh geometry;
 
 	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
@@ -171,6 +216,47 @@ public:
 		geometry.init(core, vertices, indices);
 
 	}
+
+	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core) {
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+
+		geometry.draw(core);
+	}
+
+	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	void move(float x,float y, float z, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w.a[0][3] += x;
+		w.a[1][3] += z;
+		w.a[2][3] += y;
+		//w = Matrix::translation(v);
+
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
+
+	Vec3 getPos() {
+		return w.getTranslation();
+	}
+
+	void setPos(Vec3 newPos) {
+		w.setTranslation(newPos);
+	}
+
+	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w = Matrix::scaling(v);
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
+
+	void Rotatex(float dt, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w = Matrix::rotateX(dt);
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
 };
 
 class Sphere {
@@ -179,6 +265,7 @@ public:
 	int rings;
 	int segments; 
 	float radius;
+	Matrix w;
 
 	Sphere(int _rings, int _segments, float _radius) {
 		rings = _rings;
@@ -236,10 +323,38 @@ public:
 		geometry.init(core, vertices, indices);
 
 	}
+
+	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures) {
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+
+		shaders.updateTexturePS(shadername, core, "tex", textures->find("sky2.png"));
+		geometry.draw(core);
+	}
+
+
+	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	void move(float v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w.a[0][3] += v;
+		//w = Matrix::translation(v);
+
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
+
+	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w = Matrix::scaling(v);
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
 };
 
 class Model{
 	std::vector<Mesh> meshes;
+	Matrix w;
+	std::vector<std::string> textureFilenames;
 public:
 	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
 	{
@@ -267,16 +382,47 @@ public:
 				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
 				vertices.push_back(v);
 			}
+			textureFilenames.push_back(gemmeshes[i].material.find("diffuse").getValue());
 			mesh.init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
 		}
 	}
 
-	void draw(DXCOre* core) {
+	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, float time) {
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+
+
 		for (int i = 0; i < meshes.size(); i++)
 		{
+
+			if (textureFilenames[i] == "Textures/pine branch.png") {
+				shaders.updateConstantVS("TexturedModelWave","waveMeshBuffer", "W", &w);
+				shaders.updateConstantVS("TexturedModelWave","waveMeshBuffer", "time", &time);
+				shaders.apply("TexturedModelWave", core);
+			}
+
+			shaders.updateTexturePS(shadername, core, "tex", textures->find(textureFilenames[i]));
+			
 			meshes[i].draw(core);
 		}
+
+	}
+
+	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	void move(float v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w.a[0][3] += v;
+
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
+	}
+
+	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	{
+		w = Matrix::scaling(v);
+		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
+		shaders.apply(shadername, core);
 	}
 };
 
