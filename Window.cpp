@@ -49,6 +49,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		window->updateMouse(WINDOW_GET_X_LPARAM(lParam), WINDOW_GET_Y_LPARAM(lParam));
 		return 0;
 	}
+	case WM_SETFOCUS:
+	{
+		ShowCursor(false);
+		break;
+	}
+	case WM_KILLFOCUS:
+	{
+		ShowCursor(true);
+		break;
+	}
 	default:
 	{
 		return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -101,3 +111,11 @@ void Window::processMessages() {
 		DispatchMessage(&msg);
 	}
 }
+
+// Checks if a specific key is currently pressed
+bool Window::keyPressed(int key)
+{
+	return keys[key];
+}
+
+

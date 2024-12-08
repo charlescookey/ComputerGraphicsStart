@@ -28,5 +28,7 @@ public:
 	}
 
 	void processMessages();
+
+	bool keyPressed(int key);
 };
 
