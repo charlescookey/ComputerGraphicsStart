@@ -116,5 +116,22 @@ public:
 		swapchain->Present(0, 0);
 	}
 
+
+
+
+
+	void SetBackBufferRenderTarget()
+	{
+		// Bind the render target view and depth stencil buffer to the output render pipeline.
+		devicecontext->OMSetRenderTargets(1, &backbufferRenderTargetView, depthStencilView);
+		ResetViewport();
+	}
+
+
+	void ResetViewport()
+	{
+		// Set the viewport.
+		devicecontext->RSSetViewports(1, &viewport);
+	}
 };
 
