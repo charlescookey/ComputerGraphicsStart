@@ -1,0 +1,55 @@
+Texture2D tex : register(t0);
+SamplerState samplerLinear : register(s0);
+
+cbuffer lightAttributes
+{
+	float4 ambientColor;
+    float4 diffuseColor;
+    float3 lightDirection;
+	float padding;
+};
+
+struct PS_INPUT
+{
+	float4 Pos : SV_POSITION;
+	float3 normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+	float3 world_pos: TEXCOORD1;
+};
+
+float4 PS(PS_INPUT input) : SV_Target0
+{
+	float3 lightDir;
+	float lightIntensity;
+	float4 color = float4(1,1,1,1);
+	
+	float4 textureColor = tex.Sample(samplerLinear, input.TexCoords);
+	if (textureColor.a < 0.5)
+	{
+    		discard;
+	}
+	
+	// Set the default output color to the ambient light value for all pixels.
+    color = ambientColor;
+
+	// Invert the light direction for calculations.
+    lightDir = -lightDirection;
+
+    // Calculate the amount of light on this pixel.
+    lightIntensity = saturate(dot(input.normal, lightDir));
+
+	if(lightIntensity > 0.0f)
+    {
+        // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
+        color += (diffuseColor * lightIntensity);
+    }
+
+    // Saturate the final light color.
+    color = saturate(color);
+
+    // Multiply the texture pixel and the final diffuse color to get the final pixel color result.
+	color = color * textureColor;
+
+	return color;
+}

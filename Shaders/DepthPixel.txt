@@ -1,0 +1,31 @@
+Texture2D shaderTexture : register(t0);
+SamplerState samplerLinear : register(s0);
+
+struct PS_INPUT
+{
+	float4 Pos : SV_POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+	float4 depthPosition: TEXTURE0;
+};
+
+float4 PS(PS_INPUT input) : SV_Target0
+{
+	float depthValue;
+	float4 color;
+	
+	color = shaderTexture.Sample(samplerLinear, input.TexCoords);
+	if (color.a < 0.5)
+	{
+    		discard;
+	}
+	
+	
+	// Get the depth value of the pixel by dividing the Z pixel depth by the homogeneous W coordinate.
+	depthValue = input.depthPosition.z / input.depthPosition.w;
+
+	color = float4(depthValue, depthValue, depthValue, 1.0f);
+
+	return color;
+}
