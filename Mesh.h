@@ -80,7 +80,7 @@ public:
 	}
 };
 
-class Plane {
+class CustomMesh {
 public:
 	Mesh geometry;
 	Matrix w;
@@ -93,13 +93,13 @@ public:
 		//Frame frame;
 		//frame.fromVector(n);c
 		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0,0,0); // For now
+		v.tangent = Vec3(0, 0, 0); // For now
 		v.tu = tu;
 		v.tv = tv;
 		return v;
 	}
 
-	void init(DXCOre* core) {
+	void _init(DXCOre* core) {
 		std::vector<STATIC_VERTEX> vertices;
 		vertices.push_back(addVertex(Vec3(-15, 0, -15), Vec3(0, 1, 0), 0, 0));
 		vertices.push_back(addVertex(Vec3(15, 0, -15), Vec3(0, 1, 0), 1, 0));
@@ -128,216 +128,10 @@ public:
 		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
 		shaders.apply(shadername, core);
 	}
-
-	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	
+	void translate(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
 	{
-		w = Matrix::scaling(v);
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-	}
-};
-
-class Cube {
-public:
-	Matrix w;
-	Mesh geometry;
-
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
-	{
-		STATIC_VERTEX v;
-		v.pos = p;
-		v.normal = n;
-		//Frame frame;
-		//frame.fromVector(n);c
-		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0,0,0); // For now
-		v.tu = tu;
-		v.tv = tv;
-		return v;
-	}
-
-	void init(DXCOre* core) {
-		std::vector<STATIC_VERTEX> vertices;
-		Vec3 p0 = Vec3(-1.0f, -1.0f, -1.0f);
-		Vec3 p1 = Vec3(1.0f, -1.0f, -1.0f);
-		Vec3 p2 = Vec3(1.0f, 1.0f, -1.0f);
-		Vec3 p3 = Vec3(-1.0f, 1.0f, -1.0f);
-		Vec3 p4 = Vec3(-1.0f, -1.0f, 1.0f);
-		Vec3 p5 = Vec3(1.0f, -1.0f, 1.0f);
-		Vec3 p6 = Vec3(1.0f, 1.0f, 1.0f);
-		Vec3 p7 = Vec3(-1.0f, 1.0f, 1.0f);
-
-		vertices.push_back(addVertex(p0, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p1, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p2, Vec3(0.0f, 0.0f, -1.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p3, Vec3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f));
-
-		vertices.push_back(addVertex(p5, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p4, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p7, Vec3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p6, Vec3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f));
-
-		vertices.push_back(addVertex(p4, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p0, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p3, Vec3(-1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p7, Vec3(-1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
-
-
-		vertices.push_back(addVertex(p1, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p5, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p6, Vec3(1.0f, 0.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p2, Vec3(1.0f, 0.0f, 0.0f), 0.0f, 0.0f));
-
-		vertices.push_back(addVertex(p3, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p2, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p6, Vec3(0.0f, 1.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p7, Vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f));
-
-		vertices.push_back(addVertex(p4, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 1.0f));
-		vertices.push_back(addVertex(p5, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 1.0f));
-		vertices.push_back(addVertex(p1, Vec3(0.0f, -1.0f, 0.0f), 1.0f, 0.0f));
-		vertices.push_back(addVertex(p0, Vec3(0.0f, -1.0f, 0.0f), 0.0f, 0.0f));
-
-
-		std::vector<unsigned int> indices;
-		indices.push_back(0); indices.push_back(1); indices.push_back(2);
-		indices.push_back(0); indices.push_back(2); indices.push_back(3);
-		indices.push_back(4); indices.push_back(5); indices.push_back(6);
-		indices.push_back(4); indices.push_back(6); indices.push_back(7);
-		indices.push_back(8); indices.push_back(9); indices.push_back(10);
-		indices.push_back(8); indices.push_back(10); indices.push_back(11);
-		indices.push_back(12); indices.push_back(13); indices.push_back(14);
-		indices.push_back(12); indices.push_back(14); indices.push_back(15);
-		indices.push_back(16); indices.push_back(17); indices.push_back(18);
-		indices.push_back(16); indices.push_back(18); indices.push_back(19);
-		indices.push_back(20); indices.push_back(21); indices.push_back(22);
-		indices.push_back(20); indices.push_back(22); indices.push_back(23);
-
-		geometry.init(core, vertices, indices);
-
-	}
-
-	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core) {
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-
-		geometry.draw(core);
-	}
-
-	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	void move(float x,float y, float z, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w.a[0][3] += x;
-		w.a[1][3] += z;
-		w.a[2][3] += y;
-		//w = Matrix::translation(v);
-
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-	}
-
-	Vec3 getPos() {
-		return w.getTranslation();
-	}
-
-	void setPos(Vec3 newPos) {
-		w.setTranslation(newPos);
-	}
-
-	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w = Matrix::scaling(v);
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-	}
-
-	void Rotatex(float dt, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w = Matrix::rotateX(dt);
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-	}
-};
-
-class Sphere {
-public:
-	Mesh geometry;
-	int rings;
-	int segments; 
-	float radius;
-	Matrix w;
-
-	Sphere(int _rings, int _segments, float _radius) {
-		rings = _rings;
-		segments = _segments;
-		radius = _radius;
-	}
-
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
-	{
-		STATIC_VERTEX v;
-		v.pos = p;
-		v.normal = n;
-		//Frame frame;
-		//frame.fromVector(n);c
-		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0, 0, 0); // For now
-		v.tu = tu;
-		v.tv = tv;
-		return v;
-	}
-
-	void init(DXCOre* core) {
-		std::vector<STATIC_VERTEX> vertices;
-		for (int lat = 0; lat <= rings; lat++) {
-			float theta = lat * M_PI / rings;
-			float sinTheta = sinf(theta);
-			float cosTheta = cosf(theta);
-			for (int lon = 0; lon <= segments; lon++) {
-				float phi = lon * 2.0f * M_PI / segments;
-				float sinPhi = sinf(phi);
-				float cosPhi = cosf(phi);
-				Vec3 position(radius * sinTheta * cosPhi, radius * cosTheta, radius * sinTheta * sinPhi);
-				Vec3 normal = position.normalize();
-				float tu = 1.0f - (float)lon / segments;
-				float tv = 1.0f - (float)lat / rings;
-				vertices.push_back(addVertex(position, normal, tu, tv));
-			}
-		}
-
-		std::vector<unsigned int> indices;
-		for (int lat = 0; lat < rings; lat++)
-		{
-			for (int lon = 0; lon < segments; lon++)
-			{
-				int current = lat * (segments + 1) + lon;
-				int next = current + segments + 1;
-				indices.push_back(current);
-				indices.push_back(next);
-				indices.push_back(current + 1);
-				indices.push_back(current + 1);
-				indices.push_back(next);
-				indices.push_back(next + 1);
-			}
-		}
-		geometry.init(core, vertices, indices);
-
-	}
-
-	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures) {
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-
-		shaders.updateTexturePS(shadername, core, "tex", textures->find("sky2.png"));
-		geometry.draw(core);
-	}
-
-
-	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	void move(float v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w.a[0][3] += v;
-		//w = Matrix::translation(v);
+		w = Matrix::translation(v);
 
 		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
 		shaders.apply(shadername, core);
@@ -348,81 +142,48 @@ public:
 		w = Matrix::scaling(v);
 		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
 		shaders.apply(shadername, core);
-	}
-};
-
-class Model{
-	std::vector<Mesh> meshes;
-	Matrix w;
-	std::vector<std::string> textureFilenames;
-public:
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
-	{
-		STATIC_VERTEX v;
-		v.pos = p;
-		v.normal = n;
-		//Frame frame;
-		//frame.fromVector(n);c
-		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0, 0, 0); // For now
-		v.tu = tu;
-		v.tv = tv;
-		return v;
 	}
 
 	void init(DXCOre* core , std::string filename) {
-		GEMLoader::GEMModelLoader loader;
-		std::vector<GEMLoader::GEMMesh> gemmeshes;
-		loader.load(filename, gemmeshes);
-		for (int i = 0; i < gemmeshes.size(); i++) {
-			Mesh mesh;
-			std::vector<STATIC_VERTEX> vertices;
-			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++) {
-				STATIC_VERTEX v;
-				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
-				vertices.push_back(v);
-			}
-			textureFilenames.push_back(gemmeshes[i].material.find("diffuse").getValue());
-			mesh.init(core, vertices, gemmeshes[i].indices);
-			meshes.push_back(mesh);
+
+		std::vector<STATIC_VERTEX> vertices;
+		std::vector<unsigned int> indices;
+
+
+		std::ifstream infile(filename);
+		int tilenum;
+		std::string line;
+
+		Vec3 vertex;
+		Vec3 normal;
+		float tu; float tv;
+
+		for (int i = 0; i < 4; i++) {
+			std::getline(infile, line);
 		}
-	}
 
-	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, float time) {
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-
-
-		for (int i = 0; i < meshes.size(); i++)
-		{
-
-			if (textureFilenames[i] == "Textures/pine branch.png") {
-				shaders.updateConstantVS("TexturedModelWave","waveMeshBuffer", "W", &w);
-				shaders.updateConstantVS("TexturedModelWave","waveMeshBuffer", "time", &time);
-				shaders.apply("TexturedModelWave", core);
-			}
-
-			shaders.updateTexturePS(shadername, core, "tex", textures->find(textureFilenames[i]));
+		int i = 0;
+		while (std::getline(infile, line)) {
+			std::stringstream ssin(line);
 			
-			meshes[i].draw(core);
+			ssin >> vertex.x;
+			ssin >> vertex.y;
+			ssin >> vertex.z;
+
+			ssin >> tu;
+			ssin >> tv;
+			
+			ssin >> normal.x;
+			ssin >> normal.y;
+			ssin >> normal.z;
+
+
+
+			vertices.push_back(addVertex(vertex, normal, tu, tv));
+			indices.push_back(i++);
 		}
-
-	}
-
-	//void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	void move(float v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w.a[0][3] += v;
-
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
-	}
-
-	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
-	{
-		w = Matrix::scaling(v);
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply(shadername, core);
+		infile.close();
+		geometry.init(core, vertices, indices);
 	}
 };
 
