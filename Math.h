@@ -224,7 +224,7 @@ public:
 		memcpy(&m, otherMatrix, 16 * sizeof(float));
 	}
 
-	Vec3 mulPoint(const Vec3& v)
+	Vec3 mulPoint(Vec3& v) const
 	{
 		Vec3 v1 = Vec3(
 			(v.x * m[0] + v.y * m[1] + v.z * m[2]) + m[3],
