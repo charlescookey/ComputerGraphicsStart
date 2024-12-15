@@ -187,6 +187,50 @@ public:
 	}
 };
 
+class Line {
+public:
+	ID3D11Buffer* vertexBuffer;
+
+	STATIC_VERTEX addVertex(Vec3 p)
+	{
+		STATIC_VERTEX v;
+		v.pos = p;
+		v.normal = Vec3(1.0f,0.0f,0.0f);
+		v.tangent = Vec3(0, 0, 0);
+		v.tu = 0;
+		v.tv = 0;
+		return v;
+	}
+
+	void init(DXCOre* core, Vec3 start, Vec3 end) {
+		STATIC_VERTEX vertices[2];
+		vertices[0] = addVertex(start);
+		vertices[1] = addVertex(end);
+		
+		
+		D3D11_BUFFER_DESC bd;
+		memset(&bd, 0, sizeof(D3D11_BUFFER_DESC));
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.ByteWidth = sizeof(STATIC_VERTEX) * 2;
+		bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA data;
+		memset(&data, 0, sizeof(D3D11_SUBRESOURCE_DATA));
+		data.pSysMem = vertices;
+		core->device->CreateBuffer(&bd, &data, &vertexBuffer);
+	}
+
+	void draw(DXCOre* core) {
+		UINT offsets;
+		offsets = 0;
+		UINT strides = sizeof(STATIC_VERTEX);
+		core->devicecontext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+		core->devicecontext->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
+		core->devicecontext->Draw(2, 0);
+	}
+
+};
+
 class Triangle {
 public:
 	ID3D11Buffer* vertexBuffer;
@@ -195,7 +239,7 @@ public:
 	//just cause
 	int N = 3;
 
-	void init(DXCOre *core) {
+	void init(DXCOre* core) {
 		vertices[0].position = Vec3(0, 1.0f, 0);
 		vertices[0].colour = Colour(0.f, 1.0f, 0.f, 1.f);
 		vertices[1].position = Vec3(-1.0f, -1.0f, 0);
