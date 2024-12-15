@@ -66,7 +66,7 @@ public:
 			react = false;
 			state = AnimState::Idle;
 		}
-		
+		animInstance.update(AnimStateToString(state), dt);
 	}
 
 	void takeDamage(int damage) {
@@ -85,14 +85,13 @@ public:
 		std::cout << health << "\n";
 	}
 
-	void draw(float dt, ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures) {
-		if (!show)return;
-		update(dt);
-		animInstance.update(AnimStateToString(state), dt);
+	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, std::string texVarname) {
+		if (!show)return;		
 		//animInstance.update("Idle", dt);
-		shaders.updateConstantVS("AnimatedModel", "animatedMeshBuffer", "bones", animInstance.matrices);
-		animModel.draw(shaders, "AnimatedModel", core, textures);
+		shaders.updateConstantVS(shadername, "animatedMeshBuffer", "bones", animInstance.matrices);
+		animModel.drawTexture(shaders, shadername, core, textures, "animatedMeshBuffer", "W", texVarname);
 	}
 
 
 };
+
