@@ -1,6 +1,7 @@
 #pragma once
 #include "Mesh.h"
 #include <map>
+#include "Collision.h"
 
 struct Bone
 {
@@ -147,19 +148,20 @@ class AnimatedModel {
 public:
 	Animation animation;
 	std::vector<std::string> textureFilenames;
-	
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
-	{
-		STATIC_VERTEX v;
-		v.pos = p;
-		v.normal = n;
-		//Frame frame;
-		//frame.fromVector(n);c
-		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0, 0, 0); // For now
-		v.tu = tu;
-		v.tv = tv;
-		return v;
+
+
+	AABB boundingBox;
+
+	bool checkCollision(const AABB& other) {
+		return boundingBox.checkCollision(other);
+	}
+
+	bool checkRayCollision(const Ray& other , float& t) {
+		return boundingBox.rayAABB(other , t);
+	}
+
+	void UpdateBoindingBox() {
+		boundingBox.update(w);
 	}
 
 	void init(DXCOre* core, std::string filename) {
@@ -173,6 +175,7 @@ public:
 			for (int j = 0; j < gemmeshes[i].verticesAnimated.size(); j++) {
 				ANIMATED_VERTEX v;
 				memcpy(&v, &gemmeshes[i].verticesAnimated[j], sizeof(ANIMATED_VERTEX));
+				boundingBox.extend(v.pos);
 				vertices.push_back(v);
 			}
 			textureFilenames.push_back(gemmeshes[i].material.find("diffuse").getValue());
@@ -219,9 +222,6 @@ public:
 		//shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
 		//shaders.apply("StaticModel", core);
 		 
-		
-		//Matrix w;
-		//shaders->updateConstantVS("Animated", "staticMeshBuffer", "W", &w);
 		//shaders->updateConstantVS("Animated", "staticMeshBuffer", "VP", &vp);
 		//shaders->updateConstantVS("Animated", "staticMeshBuffer", "bones", instance->matrices);
 

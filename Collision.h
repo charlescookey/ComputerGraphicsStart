@@ -1,5 +1,30 @@
 #pragma once
 #include "Math.h"
+
+class Ray
+{
+public:
+    Vec3 o;
+    Vec3 dir;
+    Vec3 invdir;
+    Ray() {}
+    Ray(const Vec3 _o, const Vec3 _dir) {
+        init(_o, _dir);
+    }
+    void init(const Vec3 _o, const Vec3 _dir) {
+        o = _o;
+        dir = _dir;
+        invdir = Vec3(1.0f, 1.0f, 1.0f) / dir;
+    }
+    Vec3 at(const float t) {
+        return (o + (dir * t));
+    }
+    void doCalc(const Vec3 start, const Vec3 to){
+
+    }
+};
+
+
 class AABB
 {
 public:
@@ -33,6 +58,19 @@ public:
         return PD.x > 0.f && PD.y > 0.f && PD.z > 0.f;
     }
 
+    bool rayAABB(const Ray& r, float& t)
+    {
+        Vec3 s = (min - r.o) * r.invdir;
+        Vec3 l = (max - r.o) * r.invdir;
+        Vec3 s1 = Min(s, l);
+        Vec3 l1 = Max(s, l);
+        float ts = max(s1.x, max(s1.y, s1.z));
+        float tl = min(l1.x, min(l1.y, l1.z));
+        t = min(ts, tl);
+        return (ts < tl);
+    }
+
+
     void print() {
         std::cout << Worldmin.x << " " << Worldmin.y << " " << Worldmin.x << "\n";
         std::cout << Worldmax.x << " " << Worldmax.y << " " << Worldmax.x << "\n";
@@ -40,4 +78,7 @@ public:
         std::cout << max.x << " " << max.y << " " << max.x << "\n\n";
     }
 };
+
+
+
 
