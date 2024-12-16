@@ -116,10 +116,6 @@ public:
 		swapchain->Present(0, 0);
 	}
 
-
-
-
-
 	void SetBackBufferRenderTarget()
 	{
 		// Bind the render target view and depth stencil buffer to the output render pipeline.

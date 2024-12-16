@@ -198,19 +198,9 @@ public:
 	}
 	void apply(DXCOre* core) {
 
-		////here?!
-		//D3D11_MAPPED_SUBRESOURCE mapped;
-		//core->devicecontext->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-		//memcpy(mapped.pData, &constBufferCPU2, sizeof(ConstantBuffer2));
-		//core->devicecontext->Unmap(constantBuffer, 0);
-
-
 		core->devicecontext->IASetInputLayout(layout);
 		core->devicecontext->VSSetShader(vertexShader, NULL, 0);
 		core->devicecontext->PSSetShader(pixelShader, NULL, 0);
-
-		//core->devicecontext->PSSetConstantBuffers(0, 1, &constantBuffer);
-
 
 		for (int i = 0; i < vsConstantBuffers.size(); i++) {
 			vsConstantBuffers[i].upload(core);
@@ -220,7 +210,4 @@ public:
 		}
 
 	}
-
 };
-
-//shaders->updateConstantVS("Animated", "staticMeshBuffer", "W", &w);

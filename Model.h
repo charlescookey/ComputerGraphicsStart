@@ -263,6 +263,10 @@ public:
 		w.a[2][3] += y;
 	}
 
+	void rot(float rot) {
+		w = Matrix::rotateZ(rot);
+	}
+
 	void translate(const Vec3& v)
 	{
 		w = Matrix::translation(v);

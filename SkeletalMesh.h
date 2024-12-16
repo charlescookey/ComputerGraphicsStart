@@ -191,10 +191,17 @@ public:
 			bone.parentIndex = gemanimation.bones[i].parentIndex;
 			animation.skeleton.bones.push_back(bone);
 		}
-
+		std::string Names;
 		for (int i = 0; i < gemanimation.animations.size(); i++)
 		{
 			std::string name = gemanimation.animations[i].name;
+			Names += name + "\n";
+
+
+			//NOT A GOOD IDEA
+			if (name == "idle") {
+				name = "Idle";
+			}
 			AnimationSequence aseq;
 			aseq.ticksPerSecond = gemanimation.animations[i].ticksPerSecond;
 			for (int n = 0; n < gemanimation.animations[i].frames.size(); n++)
@@ -215,7 +222,11 @@ public:
 				aseq.frames.push_back(frame);
 			}
 			animation.animations.insert({ name, aseq });
-		}		
+		}
+		std::ofstream outfile("saveOutput.txt");
+
+		outfile.write(Names.c_str(), Names.size());
+		outfile.close();
 	}
 
 	void draw(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures) {
@@ -249,18 +260,29 @@ public:
 		}
 	}
 
-	void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	void move(float x, float y, float z)
 	{
-		w = Matrix::translation(v);
-
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply("StaticModel", core);
+		w.a[0][3] += x;
+		w.a[1][3] += z;
+		w.a[2][3] += y;
 	}
 
-	void scale(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
+	Vec3 getPos() {
+		return w.getTranslation();
+	}
+
+	Vec3 getPos_Add_Y() {
+		Vec3 output =  w.getTranslation();
+		output.y += 2.f;
+		return output;
+	}
+
+	void setPos(Vec3 newPos) {
+		w.setTranslation(newPos);
+	}
+
+	void scale(const Vec3& v)
 	{
 		w = Matrix::scaling(v);
-		shaders.updateConstantVS(shadername, "staticMeshBuffer", "W", &w);
-		shaders.apply("StaticModel", core);
 	}
 };

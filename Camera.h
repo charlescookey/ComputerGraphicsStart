@@ -85,7 +85,7 @@ public:
         return dir;
     }
 
-    void moveCameraTest(float m_forward, float m_rightward, float dx, float dy, StaticModel& c) {
+    void moveCameraTest(float m_forward, float m_rightward, float dx, float dy, AnimatedModel& c) {
         
         Matrix cam;
         Matrix temp;
@@ -114,9 +114,9 @@ public:
 
         dir = cam.getZDirection();
 
-        Vec3 new_pos = c.getPos() + cam.getZDirection() * (m_forward * 0.5f);
+        Vec3 new_pos = c.getPos() + cam.getZDirection() * (m_forward * 0.1f);
 
-        new_pos = new_pos + cam.getXDirection() * (m_rightward * 0.5f);
+        new_pos = new_pos + cam.getXDirection() * (m_rightward * 0.1f);
 
 
         
@@ -149,6 +149,32 @@ public:
     Matrix getProjectionMatrix() const {
         return Matrix::ProjectionMatrix(fov, aspectRatio, nearPlane, farPlane);
     }
+
+
+    Matrix ConvertXMMATRIXToMatrix(const XMMATRIX& xmMatrix)
+    {
+        Matrix result;
+        XMFLOAT4X4 tempMatrix;
+        XMStoreFloat4x4(&tempMatrix, xmMatrix);
+
+        // Copy the elements into your custom Matrix class
+        for (int i = 0; i < 4; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                result.a[i][j] = tempMatrix.m[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    Matrix getOrthMatrix()  {
+        //return Matrix::OrthographicMatrix(1024.f, 1024.f, 1000, 0.3);
+        XMMATRIX m_orthoMatrix = XMMatrixOrthographicLH(1024.f, 1024.f, 1000, 0.3);
+        return ConvertXMMATRIXToMatrix(m_orthoMatrix);
+    }
+
     void GetReflectionViewMatrix(XMMATRIX& reflectionViewMatrix)
     {
         reflectionViewMatrix = m_reflectionViewMatrix;
@@ -162,5 +188,3 @@ public:
     }
 
 };
-
-

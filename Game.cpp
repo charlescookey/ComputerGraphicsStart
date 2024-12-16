@@ -19,6 +19,8 @@
 #include "Model.h"
 #include "InstanceMesh.h"
 
+#include "Font.h"
+
 
 Vec3 splitString(std::string input) {
 	std::stringstream ssin(input);
@@ -133,9 +135,8 @@ void updateLight2(SphericalCamera& camera, float dt, ShaderManager& shaders, DXC
 
 
 
-void UpdateFire(DXCOre* core, Matrix& w, Matrix& p, Matrix& v, ShaderManager& shaders, float time, TextureManager* textures, SphericalCamera& camera, SamplerManager& samplers) {
+void UpdateFire(DXCOre* core, Matrix& p, Matrix& v, ShaderManager& shaders, float time, TextureManager* textures, SamplerManager& samplers) {
 
-	shaders.updateConstantVS("FireModel", "MatrixBuffer", "worldMatrix", &w);
 	shaders.updateConstantVS("FireModel", "MatrixBuffer", "viewMatrix", &v);
 	shaders.updateConstantVS("FireModel", "MatrixBuffer", "projectionMatrix", &p);
 	
@@ -234,23 +235,6 @@ void testCollision(StaticModel& main, std::vector<StaticModel*>& meshes, Animate
 
 }
 
-
-XMMATRIX ConvertMatrixToXMMATRIX(const Matrix& customMatrix) {
-	XMMATRIX xmMatrix;
-
-	// Populate each row of the XMMATRIX using the custom Matrix
-	for (int row = 0; row < 4; ++row) {
-		xmMatrix.r[row] = XMVectorSet(
-			customMatrix.a[row][0],
-			customMatrix.a[row][1],
-			customMatrix.a[row][2],
-			customMatrix.a[row][3]
-		);
-	}
-
-	return xmMatrix;
-}
-
 //int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow) {
 int main() {
 	Window win;
@@ -269,6 +253,7 @@ int main() {
 	shaders.init(ShaderType::StaticShader, "LitStaticModel", "Shaders/LitStaticMeshVertex.txt", "Shaders/LitTextureMeshPixel.txt", &core);
 	shaders.init(ShaderType::StaticShader, "LitStaticModel2", "Shaders/LitStaticMeshVertex.txt", "Shaders/LitTextureMeshPixel2.txt", &core);
 	shaders.init(ShaderType::StaticShader, "DepthModel", "Shaders/DepthVertex.txt", "Shaders/DepthPixel.txt", &core);
+	shaders.init(ShaderType::StaticShader, "FontModel", "Shaders/FontVertex.txt", "Shaders/FontPixel.txt", &core);
 	shaders.init(ShaderType::StaticShader, "ShadowModel", "Shaders/ShadowVertex.txt", "Shaders/ShadowPixel.txt", &core);
 	shaders.init(ShaderType::StaticShader, "TexturedModel", "Shaders/StaticMeshVertex.txt", "Shaders/TextureMeshPixel.txt", &core);
 	shaders.init(ShaderType::StaticShader, "TexturedModelWave", "Shaders/StaticMeshVertexAnimation.txt", "Shaders/TextureMeshPixel.txt", &core);
@@ -290,6 +275,9 @@ int main() {
 
 	StaticModel plane;
 	plane.init_plane(&core, "Textures/metal.png");
+
+	StaticModel fireplane;
+	fireplane.init_plane(&core, "Textures/metal.png");
 
 	StaticModel cube;
 	cube.init_cube(&core, "Textures/wall.png");
@@ -319,6 +307,8 @@ int main() {
 	Character Player;
 	Player.init(&core, "Soldier1.gem");
 
+	Player.animModel.textureFilenames[0] = "Textures/MaleDuty_3_OBJ_Happy_Packed0_Diffuse.png";
+
 
 	//////FOR TESTING PURPOSES
 	std::vector<StaticModel*> meshes;
@@ -340,6 +330,7 @@ int main() {
 	textures.load(&core, "Textures/wall.png");
 	textures.load(&core, "Textures/MaleDuty_3_OBJ_Happy_Packed0_Diffuse.png");
 	textures.load(&core, "Textures/stone.png");
+	textures.load(&core, "Textures/font.png");
 	textures.load(&core, "Textures/stonenormal.png");
 	textures.load(&core, "Textures/T-rex_Normal_OpenGL.png");
 
@@ -375,6 +366,7 @@ int main() {
 
 	Matrix proj = Matrix::ProjectionMatrix(90.0, 1024 / 1024, 1000, 0.01f);
 	Matrix v;
+	Matrix p2;
 
 	tree.scale(Vec3(0.01f, 0.01f, 0.01f));
 	tree.move(-5.f, 0.f, 0.f);
@@ -382,10 +374,16 @@ int main() {
 	trees.scale(Vec3(0.01f, 0.01f, 0.01f));
 	trees.move(-5.f, 0.f, 0.f);
 
+	fireplane.rot(25);
+	fireplane.move(-40.f, 0.f, 0.f);
+
 	plane.scale(Vec3(5.f, 1.f, 5.f));
+
+	Player.animModel.scale(Vec3(0.02f, 0.02f, 0.02f));
 
 	cube.move(-20, 0, 2);
 	cube3.move(-20, 0, 2);
+	Player.animModel.move(-20, 0, 2);
 	sky.scale(Vec3(100, 100, 100));
 
 	Matrix w;
@@ -414,6 +412,13 @@ int main() {
 	float shootTime = 0.f;
 	float ShowBeam = 0.f;
 
+
+	MyFont testFont;
+	testFont.loadFont("data/font.txt");
+	testFont.BuildVertexArray("test Sentence", 0, 0);
+	testFont.init(&core, "Textures/font.png");
+
+
 	while (true)
 	{
 		win.processMessages();
@@ -438,9 +443,7 @@ int main() {
 		if (win.keyPressed('S'))  x += move;
 		if (win.keyPressed('A')) y -= move;
 		if (win.keyPressed('D')) y += move;
-		if (win.keyPressed('I')) z += move;
-		if (win.keyPressed('K')) z -= move;
-		
+				
 		mousePos.update(win.mousex, win.mousey);
 
 		float deltaX = mousePos.getMouseDeltaX(); 
@@ -449,10 +452,12 @@ int main() {
 		//CHANGE THIS BACK!!!!!
 		//texDraw3.drawToTexture(&core);
 
-		camera.moveCameraTest(x, y , deltaX, deltaY, cube3);
+		camera.moveCameraTest(x, y , deltaX, deltaY, Player.animModel);
 
 		v = camera.getViewMatrix();
 		proj = camera.getProjectionMatrix();
+		p2 = camera.getOrthMatrix();
+
 
 		Matrix vp = v.mull(proj);
 		shaders.updateConstantVS("TexturedModel", "staticMeshBuffer", "VP", &vp);
@@ -465,8 +470,12 @@ int main() {
 		shaders.updateConstantVS("NormalAnimatedModel", "animatedMeshBuffer", "VP", &vp);
 		shaders.updateConstantVS("NormalModel", "staticMeshBuffer", "VP", &vp);
 
+		shaders.updateConstantVS("LineModel", "staticMeshBuffer", "VP", &vp);
+		shaders.updateConstantVS("LineModel", "staticMeshBuffer", "W", &w);
+		shaders.apply("LineModel", &core);
 
-		Trex.update(dt);
+		Player.update(dt, y,x,&core);
+		Trex.update(dt, 0.f,0.f,&core);
 
 		//updateLight(camera, dt, shaders, &core, &textures);
 
@@ -480,6 +489,15 @@ int main() {
 		}
 
 		light1.setPos(LightPosition);
+
+		//CHANGE THIS BACK!!!!!
+		texDraw3.drawToTexture(&core);
+		shaders.updateConstantVS("FontModel", "staticMeshBuffer", "V", &v);
+		shaders.updateConstantVS("FontModel", "staticMeshBuffer", "P", &p2);
+		shaders.updateSampler("FontModel", &core, samplers.find("default"), 0);
+		testFont.drawTexture(shaders, "FontModel", &core, &textures, "staticMeshBuffer", "W", "shaderTexture");
+
+		core.SetBackBufferRenderTarget();
 
 
 		texDraw.drawToTexture(&core);
@@ -552,36 +570,30 @@ int main() {
 		plane.drawTexture(shaders, "ShadowModel", &core, &textures, "staticMeshBuffer", "W", "shaderTexture");
 
 
+		UpdateFire(&core, proj, v, shaders,t, &textures, samplers);
+		fireplane.drawNoTexture(shaders, "FireModel", "MatrixBuffer", "worldMatrix", &core);
+
+
 
 		updateNormalPixel(shaders, &core, "NormalModel", samplers,light1, textures);
 		//cube.drawTexture(shaders, "StaticModel", &core, &textures, "staticMeshBuffer", "W", "tex");
 		//cube3.drawTexture(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex");
-		cube3.drawTextureNormal(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex", "normalsTexture", "Textures/stonenormal.png");
+		
+		//cube3.drawTextureNormal(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex", "normalsTexture", "Textures/stonenormal.png");
 		//UpdateFire(&core, w, proj, v, shaders, t, &textures, camera, samplers);
 		sky.drawTexture(shaders, "TexturedModel", &core, &textures, "staticMeshBuffer", "W", "tex");
 
-		//Trex.draw(shaders, "AnimatedModelShadow", &core, &textures, "shaderTexture");
-		Trex.drawTextureNormal(shaders, "NormalAnimatedModel", &core, &textures, "animatedMeshBuffer", "W", "tex", "normalsTexture", "Textures/T-rex_Normal_OpenGL.png");
+
+		Trex.draw(shaders, "AnimatedModelShadow", &core, &textures, "shaderTexture");
+		Player.draw(shaders, "AnimatedModelShadow", &core, &textures, "shaderTexture");
+		//Trex.drawTextureNormal(shaders, "NormalAnimatedModel", &core, &textures, "animatedMeshBuffer", "W", "tex", "normalsTexture", "Textures/T-rex_Normal_OpenGL.png");
 
 		//testCollision(cube, meshes, animModel);
 
 		shootTime += dt;
 		if (win.keyPressed('F')) {
 			if (shootTime > 0.5f) {
-				Ray testRay(cube3.getPos(), camera.getDir() * -1);
-				Line testLine;
-				testLine.init(&core, testRay.at(10.f), testRay.o);
-
-				shaders.updateConstantVS("LineModel", "staticMeshBuffer", "VP", &vp);
-				shaders.updateConstantVS("LineModel", "staticMeshBuffer", "W", &w);
-				shaders.apply("LineModel", &core);
-
-				testLine.draw(&core);
-				float TimeOfIntersection = 0.f;
-				if (Trex.animModel.checkRayCollision(testRay, TimeOfIntersection)) {
-					std::cout << "Ray collided at " << TimeOfIntersection << "\n";
-					Trex.takeDamage(5);
-				}
+				Player.shootAt(Trex, camera.getDir());
 				shootTime = 0.f;
 			}
 		}

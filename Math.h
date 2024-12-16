@@ -323,6 +323,28 @@ public:
 		return mat;
 	}
 
+	static Matrix OrthographicMatrix(float width, float height, float zfar, float znear) {
+		Matrix mat;
+
+		// Zero-initialize the matrix
+		mat.zeros();
+
+		float right = width / 2.0f;
+		float left = -right;
+		float top = height / 2.0f;
+		float bottom = -top;
+
+		mat.a[0][0] = 2 / (right - left);
+		mat.a[1][1] = 2 / (top - bottom);
+		mat.a[2][2] = -2 / (zfar - znear);
+		mat.a[3][0] = -(right + left) / (right - left);
+		mat.a[3][1] = -(top + bottom) / (top - bottom);
+		mat.a[3][2] = -(zfar + znear) / (zfar - znear);
+		mat.a[3][3] = 1;
+
+		return mat;
+	}
+
 	static Matrix LookAtMatrix(Vec3 from, Vec3 to, Vec3 up) {
 		Vec3 dir = from - to;
 		dir.normalize();
