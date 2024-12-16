@@ -92,6 +92,14 @@ public:
 		animModel.drawTexture(shaders, shadername, core, textures, "animatedMeshBuffer", "W", texVarname);
 	}
 
+	void drawTextureNormal(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, std::string buffername, std::string worldVarname, std::string texVarname, std::string NormalVarname, std::string NormaltexVarname) {
+		shaders.updateTexturePS(shadername, core, NormalVarname, textures->find(NormaltexVarname));
+		shaders.updateConstantVS(shadername, "animatedMeshBuffer", "bones", animInstance.matrices);
+		shaders.apply(shadername, core);
+
+		animModel.drawTexture(shaders, shadername, core, textures, "animatedMeshBuffer", "W", texVarname);
+	}
+
 
 };
 
