@@ -77,20 +77,31 @@ class InstanceModel {
 	std::vector<std::string> textureFilenames;
 
 
+	std::vector<INSTANCE_DATA> instances;
+
 public:
 	Matrix w;
-	STATIC_VERTEX addVertex(Vec3 p, Vec3 n, float tu, float tv)
-	{
-		STATIC_VERTEX v;
-		v.pos = p;
-		v.normal = n;
-		//Frame frame;
-		//frame.fromVector(n);c
-		//v.tangent = frame.u; // For now
-		v.tangent = Vec3(0, 0, 0); // For now
-		v.tu = tu;
-		v.tv = tv;
-		return v;
+
+	Vec3 splitString(std::string input) {
+		std::stringstream ssin(input);
+		Vec3 output;
+		ssin >> output.x;
+		ssin >> output.y;
+		ssin >> output.z;
+		return output;
+	}
+
+	void loadInstancePosition(std::string filename) {
+		std::ifstream infile(filename);
+		int tilenum;
+		std::string line;
+
+		INSTANCE_DATA temp;
+		while (std::getline(infile, line)) {
+			temp.position = splitString(line);
+			instances.push_back(temp);
+		}
+		infile.close();
 	}
 
 	void init_model(DXCOre* core, std::string filename) {
@@ -106,17 +117,6 @@ public:
 				vertices.push_back(v);
 			}
 			textureFilenames.push_back(gemmeshes[i].material.find("diffuse").getValue());
-
-			std::vector<INSTANCE_DATA> instances;
-			INSTANCE_DATA test;
-			test.position = Vec3(500, 0, 500);
-			instances.push_back(test);
-			test.position = Vec3(1000, 0, 1000);
-			instances.push_back(test);
-			test.position = Vec3(1500, 0, 1500);
-			instances.push_back(test);
-			test.position = Vec3(2000, 0, 2000);
-			instances.push_back(test);
 
 			mesh.init(core, vertices, gemmeshes[i].indices, instances);
 			meshes.push_back(mesh);

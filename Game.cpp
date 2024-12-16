@@ -213,9 +213,6 @@ void updateNormalPixel(ShaderManager& shaders, DXCOre* core, std::string shadern
 	shaders.updateConstantPS(shadername, "NormalBuffer", "lightDir", &light1.dir);
 	shaders.updateConstantPS(shadername, "NormalBuffer", "lightColour", &light1.color);
 
-	shaders.updateTexturePS(shadername, core, "normalsTexture", textures.find("Textures/stonenormal.png"));
-
-
 	shaders.updateSampler(shadername, core, samplers.find("default"), 0);
 }
 
@@ -278,6 +275,7 @@ int main() {
 	shaders.init(ShaderType::StaticShader, "WaterModel", "Shaders/WaterVertex.txt", "Shaders/WaterPixel.txt", &core);
 	shaders.init(ShaderType::StaticShader, "FireModel", "Shaders/FireVertex.txt", "Shaders/FirePixel.txt", &core);
 	shaders.init(ShaderType::AnimatedShader, "AnimatedModel", "Shaders/AnimatedMeshVertex.txt", "Shaders/TextureMeshPixel.txt", &core);
+	shaders.init(ShaderType::AnimatedShader, "NormalAnimatedModel", "Shaders/AnimatedMeshVertex.txt", "Shaders/NormalMapPixel.txt", &core);
 	shaders.init(ShaderType::AnimatedShader, "AnimatedModelDepth", "Shaders/AnimatedMeshDepthVertex.txt", "Shaders/DepthPixel.txt", &core);
 	shaders.init(ShaderType::AnimatedShader, "AnimatedModelShadow", "Shaders/AnimatedMeshShadowVertex.txt", "Shaders/ShadowPixel.txt", &core);
 	shaders.init(ShaderType::InstanceShader, "ShadowModelInstance", "Shaders/ShadowVertexInstance.txt", "Shaders/ShadowPixel.txt", &core);
@@ -312,6 +310,7 @@ int main() {
 	tree.init_model(&core, "pine.gem");
 
 	InstanceModel trees;
+	trees.loadInstancePosition("data/TreeInstances.txt");
 	trees.init_model(&core, "pine.gem");
 
 	Character Trex;
@@ -342,6 +341,7 @@ int main() {
 	textures.load(&core, "Textures/MaleDuty_3_OBJ_Happy_Packed0_Diffuse.png");
 	textures.load(&core, "Textures/stone.png");
 	textures.load(&core, "Textures/stonenormal.png");
+	textures.load(&core, "Textures/T-rex_Normal_OpenGL.png");
 
 
 	shaders.updateSampler("TexturedModel", &core, samplers.find("default"), 0);
@@ -462,6 +462,7 @@ int main() {
 		shaders.updateConstantVS("LitStaticModel", "staticMeshBuffer", "VP", &vp);
 		shaders.updateConstantVS("WaterModel", "WaterBuffer", "VP", &vp);
 		shaders.updateConstantVS("AnimatedModel", "animatedMeshBuffer", "VP", &vp);
+		shaders.updateConstantVS("NormalAnimatedModel", "animatedMeshBuffer", "VP", &vp);
 		shaders.updateConstantVS("NormalModel", "staticMeshBuffer", "VP", &vp);
 
 
@@ -554,11 +555,13 @@ int main() {
 
 		updateNormalPixel(shaders, &core, "NormalModel", samplers,light1, textures);
 		//cube.drawTexture(shaders, "StaticModel", &core, &textures, "staticMeshBuffer", "W", "tex");
-		cube3.drawTexture(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex");
+		//cube3.drawTexture(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex");
+		cube3.drawTextureNormal(shaders, "NormalModel", &core, &textures, "staticMeshBuffer", "W", "tex", "normalsTexture", "Textures/stonenormal.png");
 		//UpdateFire(&core, w, proj, v, shaders, t, &textures, camera, samplers);
 		sky.drawTexture(shaders, "TexturedModel", &core, &textures, "staticMeshBuffer", "W", "tex");
 
-		Trex.draw(shaders, "AnimatedModelShadow", &core, &textures, "shaderTexture");
+		//Trex.draw(shaders, "AnimatedModelShadow", &core, &textures, "shaderTexture");
+		Trex.drawTextureNormal(shaders, "NormalAnimatedModel", &core, &textures, "animatedMeshBuffer", "W", "tex", "normalsTexture", "Textures/T-rex_Normal_OpenGL.png");
 
 		//testCollision(cube, meshes, animModel);
 

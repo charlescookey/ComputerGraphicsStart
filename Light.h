@@ -6,9 +6,13 @@
 
 class Light {
 public:
-    Vec3 target;                    // The target point the camera is looking at
-    Vec3 position;                  // Camera position in Cartesian coordinates
+    Vec3 target;                    
+    Vec3 position;                  
     Vec3 up;
+    
+    
+    Vec3 dir;
+    Vec3 color;
 
     float fov;
     float aspectRatio;
@@ -26,6 +30,12 @@ public:
 
         v = Matrix::LookAtMatrixRot(position, target, up);
         p = Matrix::ProjectionMatrix(fov, aspectRatio, nearPlane, farPlane);
+
+
+        dir = target - position;
+        dir = dir.normalize();
+
+        color = Vec3(1.f, 1.f, 1.f);
 
         w.setTranslation(position);
         vp = v.mull(p);
@@ -48,6 +58,14 @@ public:
 
     Vec3 getPos() {
         return w.getTranslation();
+    }
+    
+    Vec3 getDir() {
+        return dir;
+    }
+    
+    Vec3 getColor() {
+        return Vec3(1.f , 1.f, 1.f);
     }
 
 

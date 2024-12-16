@@ -1,0 +1,53 @@
+Texture2D tex : register(t0);
+Texture2D normalsTexture : register(t1);
+SamplerState samplerLinear : register(s0);
+
+cbuffer NormalBuffer
+{
+    float3 lightDir;
+    float3 lightColour;
+};
+
+struct PS_INPUT
+{
+	float4 Pos : SV_POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+};
+
+float4 PS(PS_INPUT input) : SV_Target0
+{
+	
+	float4 albedo;
+	albedo = tex.Sample(samplerLinear, input.TexCoords);
+	if (albedo.a < 0.5)
+	{
+		discard;
+	}
+	
+	float PI = 3.14159265358979323846;
+	float3 normal = normalize(input.Normal);
+	float3 tangent = normalize(input.Tangent);
+	float3 binormal = normalize(cross(input.Normal, tangent));
+	float3x3 TBN = float3x3(tangent, binormal, normal);
+	
+	float3 mapNormal = normalsTexture.Sample(samplerLinear, input.TexCoords).xyz;
+	//float3 normals = mapNormal * 2.0 - 1.0;
+	float3 tangentSpaceNormal = mapNormal * 2.0 - 1.0;
+    
+    //float3 bumpedNormalW = mul(normalT, TBN);
+	
+
+
+	//float3 localLightDir = mul(lightDir, transpose(TBN));
+	//float3 diffuse = (albedo / PI) * lightColour * dot(mapNormal, localLightDir);
+    //return float4(diffuse,1.f);
+	
+	float3 worldNormal = normalize(mul(tangentSpaceNormal, TBN));
+    float3 normalizedLightDir = normalize(lightDir);
+    float NdotL = max(dot(worldNormal, normalizedLightDir), 0.0);
+    float3 diffuse = (albedo.rgb / PI) * lightColour * NdotL;
+
+    return float4(diffuse, 1.0f);
+}

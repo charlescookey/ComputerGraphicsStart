@@ -15,8 +15,8 @@ class StaticModel {
 public:
 	AABB boundingBox;
 
-	bool checkCollision(const StaticModel* other) {
-		return boundingBox.checkCollision(other->boundingBox);
+	bool checkCollision(const AABB& other) {
+		return boundingBox.checkCollision(other);
 	}
 
 	void UpdateBoindingBox() {
@@ -50,9 +50,29 @@ public:
 			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++) {
 				STATIC_VERTEX v;
 				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+				boundingBox.extend(v.pos);
 				vertices.push_back(v);
 			}
 			textureFilenames.push_back(gemmeshes[i].material.find("diffuse").getValue());
+			mesh.init(core, vertices, gemmeshes[i].indices);
+			meshes.push_back(mesh);
+		}
+	}
+
+	void init_model2(DXCOre* core, std::string filename, std::string textureName) {
+		GEMLoader::GEMModelLoader loader;
+		std::vector<GEMLoader::GEMMesh> gemmeshes;
+		loader.load(filename, gemmeshes);
+		for (int i = 0; i < gemmeshes.size(); i++) {
+			Mesh mesh;
+			std::vector<STATIC_VERTEX> vertices;
+			for (int j = 0; j < gemmeshes[i].verticesStatic.size(); j++) {
+				STATIC_VERTEX v;
+				memcpy(&v, &gemmeshes[i].verticesStatic[j], sizeof(STATIC_VERTEX));
+				boundingBox.extend(v.pos);
+				vertices.push_back(v);
+			}
+			textureFilenames.push_back(textureName);
 			mesh.init(core, vertices, gemmeshes[i].indices);
 			meshes.push_back(mesh);
 		}
@@ -194,6 +214,19 @@ public:
 	void drawTexture(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, std::string buffername, std::string worldVarname, std::string texVarname ) {
 		shaders.updateConstantVS(shadername, buffername, worldVarname, &w);
 		shaders.apply(shadername, core);
+
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			shaders.updateTexturePS(shadername, core, texVarname, textures->find(textureFilenames[i]));
+			meshes[i].draw(core);
+		}
+	}
+	
+	void drawTextureNormal(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, std::string buffername, std::string worldVarname, std::string texVarname, std::string NormalVarname, std::string NormaltexVarname) {
+		shaders.updateConstantVS(shadername, buffername, worldVarname, &w);
+		shaders.updateTexturePS(shadername, core, NormalVarname, textures->find(NormaltexVarname));
+		shaders.apply(shadername, core);
+
 
 		for (int i = 0; i < meshes.size(); i++)
 		{

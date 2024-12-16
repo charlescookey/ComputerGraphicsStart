@@ -238,6 +238,17 @@ public:
 
 	}
 
+	void drawTexture(ShaderManager& shaders, std::string shadername, DXCOre* core, TextureManager* textures, std::string buffername, std::string worldVarname, std::string texVarname) {
+		shaders.updateConstantVS(shadername, buffername, worldVarname, &w);
+		shaders.apply(shadername, core);
+
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			shaders.updateTexturePS(shadername, core, texVarname, textures->find(textureFilenames[i]));
+			meshes[i].draw(core);
+		}
+	}
+
 	void move(const Vec3& v, ShaderManager& shaders, std::string shadername, DXCOre* core)
 	{
 		w = Matrix::translation(v);

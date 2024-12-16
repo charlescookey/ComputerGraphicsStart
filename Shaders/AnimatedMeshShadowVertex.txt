@@ -1,0 +1,87 @@
+cbuffer animatedMeshBuffer
+{
+	float4x4 W;
+	float4x4 VP;
+	float4x4 bones[256];
+	matrix lightVP;
+    matrix lightVP2;
+};
+
+cbuffer LightPositionBuffer
+{
+    float3 lightPosition;
+    float padding;
+    float3 lightPosition2;
+    float padding2;
+};
+
+struct VS_INPUT
+{
+	float4 Pos : POS;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 TexCoords : TEXCOORD;
+	uint4 BoneIDs : BONEIDS;
+	float4 BoneWeights : BONEWEIGHTS;
+};
+
+struct PS_INPUT
+{
+	float4 Pos : SV_POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float2 tex : TEXCOORD;
+	float4 lightViewPosition  : TEXCOORD1;
+    float3 lightPos : TEXCOORD2;
+    float4 lightViewPosition2 : TEXCOORD3;
+    float3 lightPos2 : TEXCOORD4;
+};
+
+PS_INPUT VS(VS_INPUT input)
+{
+	PS_INPUT output;
+	float4 worldPosition;
+	float4x4 transform = bones[input.BoneIDs[0]] * input.BoneWeights[0];
+	transform += bones[input.BoneIDs[1]] * input.BoneWeights[1];
+	transform += bones[input.BoneIDs[2]] * input.BoneWeights[2];
+	transform += bones[input.BoneIDs[3]] * input.BoneWeights[3];
+	
+	input.Pos.w = 1.0f;
+	
+	output.Pos = mul(input.Pos, transform);
+	output.Pos = mul(output.Pos, W);
+	output.Pos = mul(output.Pos, VP);
+	
+	output.lightViewPosition  = mul(input.Pos, transform);
+	output.lightViewPosition  = mul(output.lightViewPosition, W);
+    output.lightViewPosition  = mul(output.lightViewPosition, lightVP);	
+	
+	output.lightViewPosition2  = mul(input.Pos, transform);
+	output.lightViewPosition2  = mul(output.lightViewPosition2, W);
+    output.lightViewPosition2  = mul(output.lightViewPosition2, lightVP);
+	
+	
+	
+	output.Normal = mul(input.Normal, (float3x3)transform);
+	output.Normal = mul(output.Normal, (float3x3)W);
+	output.Normal = normalize(output.Normal);
+	
+	output.Tangent = mul(input.Tangent, (float3x3)transform);
+	output.Tangent = mul(output.Tangent, (float3x3)W);
+	output.Tangent = normalize(output.Tangent);
+	
+	worldPosition = mul(input.Pos, transform);
+	worldPosition = mul(worldPosition, W);
+
+    output.lightPos = lightPosition.xyz - worldPosition.xyz;
+    output.lightPos = normalize(output.lightPos);
+
+    output.lightPos2 = lightPosition2.xyz - worldPosition.xyz;
+    output.lightPos2 = normalize(output.lightPos2);
+	
+	
+	output.tex = input.TexCoords;
+	return output;
+}
+
+
