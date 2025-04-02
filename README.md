@@ -1,4 +1,4 @@
-**Assigment for Computer Graphics
+**Assigment for Computer Graphics**
 
 A basic 3D game developed in C++ and DirectX 11.
 This games implements the following
